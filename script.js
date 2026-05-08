@@ -121,7 +121,7 @@ function createCard(note) {
       <span class="badge ${badgeClass}">${toolLabel}</span>
       <span class="tag tag-${note.tag}">${tagEmoji(note.tag)}${note.tag}</span>
     </div>
-    <p class="expand-hint">👆 클릭하여 내용 보기</p>
+    <p class="expand-hint">클릭하여 내용 보기</p>
     <p class="card-content">${escapeHtml(note.content)}</p>
     <time class="card-date">${formatDate(note.date)}</time>
   `;
@@ -184,8 +184,7 @@ function deleteNote(id) {
 
 // ===== Tag Emoji =====
 function tagEmoji(tag) {
-  const map = { '팁': '💡 ', '트러블슈팅': '🔧 ', '레퍼런스': '📎 ' };
-  return map[tag] || '';
+  return '';
 }
 
 // ===== Escape =====
