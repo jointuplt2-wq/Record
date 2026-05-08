@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Recording Notes</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" fill="rgba(99,102,241,0.15)" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+              <path d="M36 10 L22 34 H31 L28 54 L44 28 H34 Z" fill="#6366f1" stroke="#a5b4fc" stroke-width="1" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h1>AI Recording Notes</h1>
+        </div>
+        <p class="subtitle">🤖 Claude Code & Antigravity 팁 기록소 ✨</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- 입력 폼 -->
+      <section class="form-section glass">
+        <h2 class="section-title">📝 새 기록 추가</h2>
+        <form id="noteForm" class="note-form">
+          <div class="form-row">
+            <input
+              type="text"
+              id="noteTitle"
+              class="input"
+              placeholder="제목을 입력하세요"
+              required
+            />
+            <select id="noteTool" class="select">
+              <option value="claude">Claude Code</option>
+              <option value="antigravity">Antigravity</option>
+            </select>
+            <select id="noteTag" class="select">
+              <option value="팁">팁</option>
+              <option value="트러블슈팅">트러블슈팅</option>
+              <option value="레퍼런스">레퍼런스</option>
+            </select>
+          </div>
+          <textarea
+            id="noteContent"
+            class="textarea"
+            placeholder="내용을 입력하세요"
+            rows="4"
+            required
+          ></textarea>
+          <button type="submit" class="btn btn-primary">💾 저장하기</button>
+        </form>
+      </section>
+
+      <!-- 탭 필터 -->
+      <nav class="tab-nav">
+        <button class="tab active" data-filter="all">🗂️ 전체</button>
+        <button class="tab" data-filter="claude">🟣 Claude Code</button>
+        <button class="tab" data-filter="antigravity">🔵 Antigravity</button>
+      </nav>
+
+      <!-- 카드 목록 -->
+      <section id="noteList" class="note-list">
+        <!-- 카드는 JS로 동적 렌더링 -->
+      </section>
+
+      <!-- 빈 상태 -->
+      <div id="emptyState" class="empty-state hidden">
+        <span class="empty-icon">📭</span>
+        <p>아직 기록이 없습니다.<br />위에서 첫 번째 노트를 추가해 보세요.</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
