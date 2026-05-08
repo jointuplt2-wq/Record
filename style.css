@@ -54,7 +54,7 @@ body {
 .logo { display: flex; align-items: center; gap: 12px; }
 .logo-icon { display: flex; align-items: center; filter: drop-shadow(0 0 8px rgba(99,102,241,0.5)); }
 .logo h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-.subtitle { color: var(--text-secondary); font-size: 14px; margin-left: 40px; }
+.subtitle { color: var(--text-secondary); font-size: 14px; text-align: center; width: 100%; margin-top: 6px; }
 
 /* ===== Glass Card ===== */
 .glass {
@@ -272,7 +272,7 @@ option { background: #1a1a2e; }
 }
 
 /* ===== Header Right ===== */
-.header-inner { display: flex; align-items: center; justify-content: space-between; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .header-right { display: flex; align-items: center; gap: 10px; }
 .btn-icon {
   background: transparent;
