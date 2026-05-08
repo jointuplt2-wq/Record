@@ -106,9 +106,9 @@ function createCard(note) {
   card.dataset.id = note.id;
 
   const toolMap = {
-    claude:      { label: '🟣 Claude Code', badge: 'badge-claude' },
-    antigravity: { label: '🔵 Antigravity',  badge: 'badge-antigravity' },
-    gemini:      { label: '🟢 Gemini CLI',   badge: 'badge-gemini' },
+    claude:      { label: 'Claude Code', badge: 'badge-claude' },
+    antigravity: { label: 'Antigravity',  badge: 'badge-antigravity' },
+    gemini:      { label: 'Gemini CLI',   badge: 'badge-gemini' },
   };
   const { label: toolLabel, badge: badgeClass } = toolMap[note.tool] || toolMap.claude;
 
