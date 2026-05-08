@@ -1,26 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- 배경 원 -->
-  <circle cx="32" cy="32" r="32" fill="#0d0d0f"/>
+  <!-- 배경 -->
+  <rect width="64" height="64" rx="14" fill="#0d0d0f"/>
 
-  <!-- 보라 글로우 링 -->
-  <circle cx="32" cy="32" r="28" stroke="#6366f1" stroke-width="2" opacity="0.4"/>
+  <!-- 노트북 바디 -->
+  <rect x="12" y="10" width="34" height="42" rx="4" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.5"/>
 
-  <!-- 번개 볼트 (Claude 상징) -->
-  <path d="M36 10 L22 34 H31 L28 54 L44 28 H34 Z"
-        fill="#6366f1"
-        stroke="#818cf8"
-        stroke-width="1"
-        stroke-linejoin="round"/>
+  <!-- 노트북 스프링 (왼쪽 바인딩) -->
+  <rect x="10" y="10" width="6" height="42" rx="3" fill="#0d0d0f" stroke="#4a4a6e" stroke-width="1"/>
+  <circle cx="13" cy="18" r="2" fill="#6366f1" opacity="0.8"/>
+  <circle cx="13" cy="26" r="2" fill="#6366f1" opacity="0.8"/>
+  <circle cx="13" cy="34" r="2" fill="#6366f1" opacity="0.8"/>
+  <circle cx="13" cy="42" r="2" fill="#6366f1" opacity="0.8"/>
 
-  <!-- 글로우 효과 -->
-  <path d="M36 10 L22 34 H31 L28 54 L44 28 H34 Z"
-        fill="url(#glow)"
-        opacity="0.3"/>
+  <!-- 텍스트 줄 (노트 라인) -->
+  <line x1="22" y1="22" x2="40" y2="22" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="22" y1="28" x2="38" y2="28" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="22" y1="34" x2="36" y2="34" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
 
-  <defs>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#a5b4fc"/>
-      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
+  <!-- 회로 패턴 (오른쪽 하단) -->
+  <!-- 수평선 -->
+  <line x1="22" y1="44" x2="30" y2="44" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- 꺾임 -->
+  <line x1="30" y1="44" x2="30" y2="40" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="30" y1="40" x2="36" y2="40" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- 노드 점 -->
+  <circle cx="30" cy="44" r="1.5" fill="#06b6d4"/>
+  <circle cx="30" cy="40" r="1.5" fill="#06b6d4"/>
+  <circle cx="36" cy="40" r="2" fill="#6366f1"/>
+
+  <!-- 글로우 -->
+  <circle cx="36" cy="40" r="4" fill="#6366f1" opacity="0.2"/>
 </svg>
