@@ -1,4 +1,4 @@
-const CACHE = 'ai-notes-v1';
+const CACHE = 'ai-notes-v2';
 const ASSETS = [
   '/Record/',
   '/Record/index.html',
