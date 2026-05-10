@@ -45,18 +45,37 @@ async function gistFetch(path, method, body) {
 }
 
 async function findGistId() {
-  // 항상 API 탐색 → 가장 최근 업데이트된 Gist를 정답으로 사용
+  // 파일명이 일치하는 Gist 전체 탐색
   const list = await gistFetch('/gists?per_page=100', 'GET');
-  // updated_at 기준 내림차순 (API 기본값) 중 파일명 일치하는 첫 번째
-  const found = list.find(g => g.files?.[GIST_FILENAME]);
-  if (found) {
-    localStorage.setItem(GIST_ID_KEY, found.id);
+  const matches = list.filter(g => g.files?.[GIST_FILENAME]);
+  if (!matches.length) return getGistId() || null;
+
+  // Gist가 하나면 바로 사용
+  if (matches.length === 1) {
+    const id = matches[0].id;
+    localStorage.setItem(GIST_ID_KEY, id);
     const el = document.getElementById('gistIdInput');
-    if (el) el.value = found.id;
-    return found.id;
+    if (el) el.value = id;
+    return id;
   }
-  // 탐색 실패 시 저장된 ID 폴백
-  return getGistId() || null;
+
+  // 여러 개이면 각각 내용을 가져와 노트 수가 가장 많은 Gist 선택
+  setSync('syncing', '🔍 최신 Gist 선택 중…');
+  const results = await Promise.all(
+    matches.map(g =>
+      gistFetch(`/gists/${g.id}`, 'GET').then(data => {
+        try {
+          const arr = JSON.parse(data.files?.[GIST_FILENAME]?.content || '[]');
+          return { id: g.id, count: Array.isArray(arr) ? arr.length : 0 };
+        } catch { return { id: g.id, count: 0 }; }
+      })
+    )
+  );
+  const best = results.reduce((a, b) => (a.count >= b.count ? a : b));
+  localStorage.setItem(GIST_ID_KEY, best.id);
+  const el = document.getElementById('gistIdInput');
+  if (el) el.value = best.id;
+  return best.id;
 }
 
 async function loadFromGist() {
