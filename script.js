@@ -44,37 +44,58 @@ async function gistFetch(path, method, body) {
   return res.json();
 }
 
-async function findGistId() {
-  // 파일명이 일치하는 Gist 전체 탐색
+async function findAndMergeGists() {
+  // 파일명 일치하는 Gist 전체 탐색
   const list = await gistFetch('/gists?per_page=100', 'GET');
   const matches = list.filter(g => g.files?.[GIST_FILENAME]);
-  if (!matches.length) return getGistId() || null;
+  if (!matches.length) return { masterId: getGistId() || null, merged: null };
 
-  // Gist가 하나면 바로 사용
-  if (matches.length === 1) {
-    const id = matches[0].id;
-    localStorage.setItem(GIST_ID_KEY, id);
-    const el = document.getElementById('gistIdInput');
-    if (el) el.value = id;
-    return id;
+  // 가장 오래된 Gist를 마스터로
+  matches.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const masterId = matches[0].id;
+
+  // 모든 Gist 내용 가져오기
+  setSync('syncing', '🔄 데이터 통합 중…');
+  const allContents = await Promise.all(
+    matches.map(g =>
+      gistFetch(`/gists/${g.id}`, 'GET').then(data => {
+        try { return JSON.parse(data.files?.[GIST_FILENAME]?.content || '[]'); }
+        catch { return []; }
+      })
+    )
+  );
+
+  // id 기준 중복 제거 후 병합 (최신 순 정렬 유지)
+  const seen = new Set();
+  const merged = allContents.flat().filter(n => {
+    if (!n.id || seen.has(n.id)) return false;
+    seen.add(n.id);
+    return true;
+  });
+
+  // 마스터 ID 저장
+  localStorage.setItem(GIST_ID_KEY, masterId);
+  const el = document.getElementById('gistIdInput');
+  if (el) el.value = masterId;
+
+  // Gist가 여럿이었으면 마스터에 통합본 업로드
+  if (matches.length > 1) {
+    const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(merged, null, 2) } } };
+    await gistFetch(`/gists/${masterId}`, 'PATCH', body);
   }
 
-  // 여러 개이면 가장 먼저 만들어진 Gist(정본)를 선택
-  matches.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  const id = matches[0].id;
-  localStorage.setItem(GIST_ID_KEY, id);
-  const el = document.getElementById('gistIdInput');
-  if (el) el.value = id;
-  return id;
+  return { masterId, merged: merged.length ? merged : null };
 }
 
 async function loadFromGist() {
   const token = getToken();
   if (!token) return null;
   setSync('syncing', '🔄 불러오는 중…');
-  const gistId = await findGistId();
-  if (!gistId) return null;
-  const data = await gistFetch(`/gists/${gistId}`, 'GET');
+  const { masterId, merged } = await findAndMergeGists();
+  if (!masterId) return null;
+  if (merged) { setSync('synced', '✅ 동기화됨'); return merged; }
+  // 단일 Gist인 경우 바로 읽기
+  const data = await gistFetch(`/gists/${masterId}`, 'GET');
   const content = data.files?.[GIST_FILENAME]?.content;
   if (!content) return null;
   setSync('synced', '✅ 동기화됨');
@@ -86,7 +107,7 @@ async function saveToGist(notes) {
   if (!token) return;
   setSync('syncing', '🔄 저장 중…');
   const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(notes, null, 2) } } };
-  let gistId = await findGistId();
+  let gistId = getGistId();   // 이미 확정된 마스터 ID 사용
   if (gistId) {
     await gistFetch(`/gists/${gistId}`, 'PATCH', body);
   } else {
@@ -97,7 +118,6 @@ async function saveToGist(notes) {
     });
     gistId = res.id;
     localStorage.setItem(GIST_ID_KEY, gistId);
-    // 설정창 ID 필드 업데이트
     const el = document.getElementById('gistIdInput');
     if (el) el.value = gistId;
   }
