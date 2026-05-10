@@ -1,10 +1,7 @@
 'use strict';
 
 // ===== Constants =====
-const STORAGE_KEY   = 'ai-coding-notes';
-const TOKEN_KEY     = 'gist-token';
-const GIST_ID_KEY   = 'gist-id';
-const GIST_FILENAME = 'ai-recording-notes.json';
+const STORAGE_KEY = 'ai-coding-notes';
 
 // ===== Seed Data =====
 const SEED_NOTES = [
@@ -18,112 +15,6 @@ const SEED_NOTES = [
   { id:'seed-8', title:'안전성(Safety) 확인 및 권한 통제', content:'위험한 명령어나 DB 삭제 관련 작업이 요청되었을 때 시스템이 "사용자의 승인"을 요구합니다. 에이전트가 제안한 CLI 명령이 의도에 맞는지 꼼꼼히 확인하고 승인하세요.', tool:'antigravity', tag:'팁', date:'2026-05-07' },
 ];
 
-// ===== Gist API =====
-function getToken()  { return localStorage.getItem(TOKEN_KEY) || ''; }
-function getGistId() { return localStorage.getItem(GIST_ID_KEY) || ''; }
-
-function setSync(state, msg) {
-  const el = document.getElementById('syncStatus');
-  if (!el) return;
-  el.className = `sync-status ${state}`;
-  el.textContent = msg;
-}
-
-async function gistFetch(path, method, body) {
-  const token = getToken();
-  const res = await fetch(`https://api.github.com${path}`, {
-    method,
-    headers: {
-      'Authorization': `token ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github+json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-  return res.json();
-}
-
-async function findAndMergeGists() {
-  // 파일명 일치하는 Gist 전체 탐색
-  const list = await gistFetch('/gists?per_page=100', 'GET');
-  const matches = list.filter(g => g.files?.[GIST_FILENAME]);
-  if (!matches.length) return { masterId: getGistId() || null, merged: null };
-
-  // 가장 오래된 Gist를 마스터로
-  matches.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  const masterId = matches[0].id;
-
-  // 모든 Gist 내용 가져오기
-  setSync('syncing', '🔄 데이터 통합 중…');
-  const allContents = await Promise.all(
-    matches.map(g =>
-      gistFetch(`/gists/${g.id}`, 'GET').then(data => {
-        try { return JSON.parse(data.files?.[GIST_FILENAME]?.content || '[]'); }
-        catch { return []; }
-      })
-    )
-  );
-
-  // id 기준 중복 제거 후 병합 (최신 순 정렬 유지)
-  const seen = new Set();
-  const merged = allContents.flat().filter(n => {
-    if (!n.id || seen.has(n.id)) return false;
-    seen.add(n.id);
-    return true;
-  });
-
-  // 마스터 ID 저장
-  localStorage.setItem(GIST_ID_KEY, masterId);
-  const el = document.getElementById('gistIdInput');
-  if (el) el.value = masterId;
-
-  // Gist가 여럿이었으면 마스터에 통합본 업로드
-  if (matches.length > 1) {
-    const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(merged, null, 2) } } };
-    await gistFetch(`/gists/${masterId}`, 'PATCH', body);
-  }
-
-  return { masterId, merged: merged.length ? merged : null };
-}
-
-async function loadFromGist() {
-  const token = getToken();
-  if (!token) return null;
-  setSync('syncing', '🔄 불러오는 중…');
-  const { masterId, merged } = await findAndMergeGists();
-  if (!masterId) return null;
-  if (merged) { setSync('synced', '✅ 동기화됨'); return merged; }
-  // 단일 Gist인 경우 바로 읽기
-  const data = await gistFetch(`/gists/${masterId}`, 'GET');
-  const content = data.files?.[GIST_FILENAME]?.content;
-  if (!content) return null;
-  setSync('synced', '✅ 동기화됨');
-  return JSON.parse(content);
-}
-
-async function saveToGist(notes) {
-  const token = getToken();
-  if (!token) return;
-  setSync('syncing', '🔄 저장 중…');
-  const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(notes, null, 2) } } };
-  let gistId = getGistId();   // 이미 확정된 마스터 ID 사용
-  if (gistId) {
-    await gistFetch(`/gists/${gistId}`, 'PATCH', body);
-  } else {
-    const res = await gistFetch('/gists', 'POST', {
-      ...body,
-      description: 'AI Recording Notes — 자동 생성',
-      public: false,
-    });
-    gistId = res.id;
-    localStorage.setItem(GIST_ID_KEY, gistId);
-    const el = document.getElementById('gistIdInput');
-    if (el) el.value = gistId;
-  }
-  setSync('synced', '✅ 동기화됨');
-}
-
 // ===== Storage =====
 function loadLocal() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
@@ -136,36 +27,21 @@ function saveLocal(notes) {
 let notes = [];
 let currentFilter = 'all';
 
-async function initNotes() {
-  if (getToken()) {
-    try {
-      const remote = await loadFromGist();
-      if (remote) { notes = remote; saveLocal(notes); renderNotes(); return; }
-    } catch (e) {
-      setSync('error', '❌ 연결 실패');
-    }
-  }
+function initNotes() {
   const local = loadLocal();
   notes = local || SEED_NOTES;
   if (!local) saveLocal(notes);
-  if (!getToken()) setSync('', '');
   renderNotes();
 }
 
-async function persistNotes() {
+function persistNotes() {
   saveLocal(notes);
-  if (getToken()) {
-    try { await saveToGist(notes); }
-    catch { setSync('error', '❌ 저장 실패'); }
-  }
 }
 
 // ===== Render =====
 function formatDate(d) {
   return new Date(d).toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' });
 }
-
-function tagEmoji() { return ''; }
 
 function createCard(note) {
   const toolMap = {
@@ -185,7 +61,7 @@ function createCard(note) {
     </div>
     <div class="card-meta">
       <span class="badge ${badgeClass}">${toolLabel}</span>
-      <span class="tag tag-${note.tag}">${tagEmoji(note.tag)}${note.tag}</span>
+      <span class="tag tag-${note.tag}">${note.tag}</span>
     </div>
     <p class="expand-hint">클릭하여 내용 보기</p>
     <p class="card-content">${escapeHtml(note.content)}</p>
@@ -229,49 +105,6 @@ function deleteNote(id) {
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ===== Settings Modal =====
-function openModal() {
-  document.getElementById('tokenInput').value  = getToken();
-  document.getElementById('gistIdInput').value = getGistId();
-  document.getElementById('settingsModal').classList.remove('hidden');
-}
-function closeModal() {
-  document.getElementById('settingsModal').classList.add('hidden');
-}
-
-document.getElementById('settingsBtn').addEventListener('click', openModal);
-document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('settingsModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
-  const token  = document.getElementById('tokenInput').value.trim();
-  const gistId = document.getElementById('gistIdInput').value.trim();
-  if (!token) { alert('토큰을 입력해 주세요.'); return; }
-  localStorage.setItem(TOKEN_KEY, token);
-  if (gistId) localStorage.setItem(GIST_ID_KEY, gistId);
-  else localStorage.removeItem(GIST_ID_KEY);
-  closeModal();
-  // 즉시 Gist에 현재 노트 업로드 or 불러오기
-  try {
-    if (gistId) {
-      const remote = await loadFromGist();
-      if (remote) { notes = remote; saveLocal(notes); renderNotes(); }
-    } else {
-      await saveToGist(notes);
-    }
-  } catch { setSync('error', '❌ 연결 실패'); }
-});
-
-document.getElementById('clearSettingsBtn').addEventListener('click', () => {
-  if (!confirm('Gist 연결을 해제하시겠습니까?\n(로컬 데이터는 유지됩니다)')) return;
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(GIST_ID_KEY);
-  setSync('', '');
-  closeModal();
-});
 
 // ===== Form =====
 document.getElementById('noteForm').addEventListener('submit', e => {

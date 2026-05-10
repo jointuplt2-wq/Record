@@ -44,10 +44,7 @@
           </span>
           <h1>AI Recording Notes</h1>
         </div>
-        <div class="header-right">
-          <span id="syncStatus" class="sync-status" title="동기화 상태"></span>
-          <button id="settingsBtn" class="btn-icon" title="GitHub Gist 설정">⚙️</button>
-        </div>
+        <div class="header-right"></div>
       </div>
       <p class="subtitle">Claude Code & Antigravity & Gemini CLI</p>
     </header>
@@ -106,34 +103,6 @@
     </main>
   </div>
 
-  <!-- 설정 모달 -->
-  <div id="settingsModal" class="modal-overlay hidden">
-    <div class="modal glass">
-      <div class="modal-header">
-        <h3>⚙️ GitHub Gist 동기화 설정</h3>
-        <button id="modalClose" class="btn-icon">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">
-          GitHub Personal Access Token을 입력하면<br />
-          모든 기기에서 노트가 자동으로 동기화됩니다.
-        </p>
-        <label class="form-label">GitHub Token
-          <a href="https://github.com/settings/tokens/new?scopes=gist&description=AI+Recording+Notes"
-             target="_blank" class="link">발급받기 →</a>
-        </label>
-        <input type="password" id="tokenInput" class="input" placeholder="ghp_xxxxxxxxxxxx" />
-        <p class="modal-hint">범위(Scope): <code>gist</code> 만 체크하면 됩니다.</p>
-
-        <label class="form-label" style="margin-top:14px">Gist ID <span class="text-muted">(자동 생성, 직접 입력 가능)</span></label>
-        <input type="text" id="gistIdInput" class="input" placeholder="기존 Gist ID (선택사항)" />
-      </div>
-      <div class="modal-footer">
-        <button id="saveSettingsBtn" class="btn btn-primary">저장 및 동기화</button>
-        <button id="clearSettingsBtn" class="btn btn-ghost">연결 해제</button>
-      </div>
-    </div>
-  </div>
 
   <script src="script.js"></script>
   <script>
