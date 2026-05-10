@@ -45,12 +45,9 @@ async function gistFetch(path, method, body) {
 }
 
 async function findGistId() {
-  // 저장된 ID가 있으면 그대로 사용
-  const saved = getGistId();
-  if (saved) return saved;
-  // 없으면 토큰으로 Gist 목록 검색해서 자동 연결
-  setSync('syncing', '🔍 Gist 탐색 중…');
+  // 항상 API 탐색 → 가장 최근 업데이트된 Gist를 정답으로 사용
   const list = await gistFetch('/gists?per_page=100', 'GET');
+  // updated_at 기준 내림차순 (API 기본값) 중 파일명 일치하는 첫 번째
   const found = list.find(g => g.files?.[GIST_FILENAME]);
   if (found) {
     localStorage.setItem(GIST_ID_KEY, found.id);
@@ -58,7 +55,8 @@ async function findGistId() {
     if (el) el.value = found.id;
     return found.id;
   }
-  return null;
+  // 탐색 실패 시 저장된 ID 폴백
+  return getGistId() || null;
 }
 
 async function loadFromGist() {
