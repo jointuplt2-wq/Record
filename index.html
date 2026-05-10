@@ -44,7 +44,12 @@
           </span>
           <h1>AI Recording Notes</h1>
         </div>
-        <div class="header-right"></div>
+        <div class="header-right">
+          <button id="exportBtn" class="btn-icon" title="JSON으로 내보내기">📤</button>
+          <label id="importLabel" class="btn-icon" title="JSON 불러오기" style="cursor:pointer">📥
+            <input type="file" id="importFile" accept=".json" style="display:none" />
+          </label>
+        </div>
       </div>
       <p class="subtitle">Claude Code & Antigravity & Gemini CLI</p>
     </header>

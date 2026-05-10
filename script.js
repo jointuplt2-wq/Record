@@ -106,6 +106,44 @@ function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ===== Export / Import =====
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const json = JSON.stringify(notes, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `ai-notes-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const loaded = JSON.parse(ev.target.result);
+      if (!Array.isArray(loaded)) throw new Error('형식 오류');
+      if (!confirm(`${loaded.length}개 노트를 불러옵니다.\n기존 데이터와 합쳐집니다. 계속할까요?`)) return;
+      // id 기준 중복 제거 후 병합 (불러온 것이 앞에)
+      const merged = [...loaded];
+      const ids = new Set(loaded.map(n => n.id));
+      notes.forEach(n => { if (!ids.has(n.id)) merged.push(n); });
+      notes = merged;
+      persistNotes();
+      renderNotes();
+      alert(`✅ ${loaded.length}개 노트를 불러왔습니다.`);
+    } catch {
+      alert('❌ 올바른 JSON 파일이 아닙니다.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
 // ===== Form =====
 document.getElementById('noteForm').addEventListener('submit', e => {
   e.preventDefault();
