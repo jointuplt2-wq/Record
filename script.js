@@ -59,23 +59,13 @@ async function findGistId() {
     return id;
   }
 
-  // 여러 개이면 각각 내용을 가져와 노트 수가 가장 많은 Gist 선택
-  setSync('syncing', '🔍 최신 Gist 선택 중…');
-  const results = await Promise.all(
-    matches.map(g =>
-      gistFetch(`/gists/${g.id}`, 'GET').then(data => {
-        try {
-          const arr = JSON.parse(data.files?.[GIST_FILENAME]?.content || '[]');
-          return { id: g.id, count: Array.isArray(arr) ? arr.length : 0 };
-        } catch { return { id: g.id, count: 0 }; }
-      })
-    )
-  );
-  const best = results.reduce((a, b) => (a.count >= b.count ? a : b));
-  localStorage.setItem(GIST_ID_KEY, best.id);
+  // 여러 개이면 가장 먼저 만들어진 Gist(정본)를 선택
+  matches.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const id = matches[0].id;
+  localStorage.setItem(GIST_ID_KEY, id);
   const el = document.getElementById('gistIdInput');
-  if (el) el.value = best.id;
-  return best.id;
+  if (el) el.value = id;
+  return id;
 }
 
 async function loadFromGist() {
