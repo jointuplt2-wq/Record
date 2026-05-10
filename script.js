@@ -44,10 +44,29 @@ async function gistFetch(path, method, body) {
   return res.json();
 }
 
+async function findGistId() {
+  // 저장된 ID가 있으면 그대로 사용
+  const saved = getGistId();
+  if (saved) return saved;
+  // 없으면 토큰으로 Gist 목록 검색해서 자동 연결
+  setSync('syncing', '🔍 Gist 탐색 중…');
+  const list = await gistFetch('/gists?per_page=100', 'GET');
+  const found = list.find(g => g.files?.[GIST_FILENAME]);
+  if (found) {
+    localStorage.setItem(GIST_ID_KEY, found.id);
+    const el = document.getElementById('gistIdInput');
+    if (el) el.value = found.id;
+    return found.id;
+  }
+  return null;
+}
+
 async function loadFromGist() {
-  const gistId = getGistId();
-  if (!gistId) return null;
+  const token = getToken();
+  if (!token) return null;
   setSync('syncing', '🔄 불러오는 중…');
+  const gistId = await findGistId();
+  if (!gistId) return null;
   const data = await gistFetch(`/gists/${gistId}`, 'GET');
   const content = data.files?.[GIST_FILENAME]?.content;
   if (!content) return null;
@@ -60,7 +79,7 @@ async function saveToGist(notes) {
   if (!token) return;
   setSync('syncing', '🔄 저장 중…');
   const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(notes, null, 2) } } };
-  let gistId = getGistId();
+  let gistId = await findGistId();
   if (gistId) {
     await gistFetch(`/gists/${gistId}`, 'PATCH', body);
   } else {
