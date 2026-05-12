@@ -1,7 +1,7 @@
 {
   "name": "AI Recording Notes",
   "short_name": "AI Notes",
-  "description": "Claude Code & Antigravity 팁 기록소",
+  "description": "Claude Code & Codex 팁 기록소",
   "start_url": "/Record/",
   "display": "standalone",
   "background_color": "#0d0d0f",

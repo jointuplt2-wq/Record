@@ -46,8 +46,7 @@ function formatDate(d) {
 function createCard(note) {
   const toolMap = {
     claude:      { label: 'Claude Code', badge: 'badge-claude' },
-    antigravity: { label: 'Antigravity',  badge: 'badge-antigravity' },
-    gemini:      { label: 'Gemini CLI',   badge: 'badge-gemini' },
+    codex:       { label: 'Codex',         badge: 'badge-codex' },
   };
   const { label: toolLabel, badge: badgeClass } = toolMap[note.tool] || toolMap.claude;
 
